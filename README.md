@@ -16,14 +16,20 @@ detect by the Bro.
 ### How to use
 
 - Change the ipdst in Config, which is the destination machine's IP.
-- Send the packets:
+- Send the packets through command line:
  ```
  python DelayAttackDemo.py
  ```
+ 
+- Send the packets through GUI:
+```
+python gui.py
+```
 - Use Bro to monitor the destination machine:
 ```buildoutcfg
 # Replace /usr/local/bro/bin/zeek with the path of your zeek bin
 # Replace enp0s25 with the network interface on your machine
 sudo /usr/lock/bro/bin/zeek -i enp0s25 detect.zeek
 ```
+
 
