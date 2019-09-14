@@ -8,6 +8,7 @@ import time
 from Config import config, DNP3PORT
 from utils.Connection import Connection
 
+
 dumpAttack = False
 smartAttack = False
 
@@ -101,7 +102,7 @@ def send_packet():
 
 if __name__ == "__main__":
     print "##########################################"
-    print "# This is the Demo for time delay Attack #"
+    print "# This is the Demo for time delay attack #"
     print "##########################################"
     print ""
 

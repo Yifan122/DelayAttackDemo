@@ -22,7 +22,7 @@ detect by the Bro.
  ```
 - Use Bro to monitor the destination machine:
 ```buildoutcfg
-# Replace /usr/lock/bro/bin/zeek with the path of your zeek bin
+# Replace /usr/local/bro/bin/zeek with the path of your zeek bin
 # Replace enp0s25 with the network interface on your machine
 sudo /usr/lock/bro/bin/zeek -i enp0s25 detect.zeek
 ```
