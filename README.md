@@ -12,6 +12,10 @@ in /zeek/detect.zeek)
 fulfill the gap using previous packets, so the whole trace looks like normal. This one is much harder
 detect by the Bro.
 
+### Dependence
+Python Version: Python 2.7
+
+For GUI demo: Tkinter
 
 ### How to use
 

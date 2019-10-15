@@ -134,7 +134,7 @@ class PageOne(tk.Frame):
         trace_label = tk.Label(self, textvariable=trace_str, font=('Arial', 18), width=120, height=10, justify=tk.LEFT)
         trace_label.pack()
 
-        self.st = tkst.ScrolledText(self, font=('Arial', 18), width=120, height=10)
+        self.st = tkst.ScrolledText(self, font=('Arial', 18), width=120, height=20)
         self.st.pack()
 
         start_button = tk.Button(self, text='Start sending packets', bg='green', width=15, height=2, command=self.startSendPackets)
