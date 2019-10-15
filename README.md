@@ -33,7 +33,7 @@ python gui.py
 ```buildoutcfg
 # Replace /usr/local/bro/bin/zeek with the path of your zeek bin
 # Replace enp0s25 with the network interface on your machine
-sudo /usr/lock/bro/bin/zeek -i enp0s25 detect.zeek
+sudo /usr/local/bro/bin/zeek -i enp0s25 detect.zeek
 ```
 
 
