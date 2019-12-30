@@ -4,6 +4,8 @@ import random
 import ScrolledText as tkst
 import threading
 import time
+import tkMessageBox
+
 
 from Config import config, DNP3PORT
 from utils.Connection import Connection
@@ -68,7 +70,7 @@ class StartPage(tk.Frame):
         number_entry = tk.Entry(self, show=None)
         number_entry.pack()
 
-        cycle_label = tk.Label(self, text="ow many cycles you want to delay: ", font=('Arial', 28),
+        cycle_label = tk.Label(self, text="how many cycles you want to delay: ", font=('Arial', 28),
                                width=40, height=2)
         cycle_label.pack()
 
@@ -134,7 +136,7 @@ class PageOne(tk.Frame):
         trace_label = tk.Label(self, textvariable=trace_str, font=('Arial', 18), width=120, height=10, justify=tk.LEFT)
         trace_label.pack()
 
-        self.st = tkst.ScrolledText(self, font=('Arial', 18), width=120, height=20)
+        self.st = tkst.ScrolledText(self, font=('Arial', 18), width=120, height=17)
         self.st.pack()
 
         start_button = tk.Button(self, text='Start sending packets', bg='green', width=15, height=2, command=self.startSendPackets)
@@ -184,8 +186,9 @@ class PageOne(tk.Frame):
             time.sleep(config.normalTime)
 
             if dumpAttack:
-                for _ in range(delayCycles):
-                    self.st.insert(tk.END, "no packet for this cycle\n")
+                for j in range(delayCycles):
+                    self.st.insert(tk.END, "no packet detected in this cycle\n", "warning")
+                    self.st.tag_config('warning', foreground='red')
                     time.sleep(config.normalTime)
 
                 dumpAttack = False

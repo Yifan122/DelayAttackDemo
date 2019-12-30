@@ -2,7 +2,7 @@ DNP3PORT = 20000
 
 class DefaultConfigs(object):
     destport = 20000  # DNP3 standard port
-    ipdst = "192.168.0.148"  # Dest IP Address
+    ipdst = "192.168.0.200"  # Dest IP Address
 
     totalPackets = 20
 
