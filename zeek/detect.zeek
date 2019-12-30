@@ -24,7 +24,11 @@ event dnp3_application_request_header(c: connection, is_orig: bool, application_
     time_seq += network_time();
     print fmt("The connection %s from %s on port %s to %s on port %s started at %s.", c$uid, c$id$orig_h, c$id$orig_p, c$id$resp_h, c$id$resp_p, network_time()-time_seq[0]); 
     if(number>0 && time_seq[number] - time_seq[number-1] > time_interval){
+        print "";
+        print "##################################################";
         print fmt("Delay attack warning from ip: %s", c$id$orig_h);
+        print "##################################################";
+        print "";
     }
 	c$dnp3$ts = network_time();
 	c$dnp3$fc_request = function_codes[fc];
