@@ -7,17 +7,56 @@ import time
 
 from Config import config, DNP3PORT
 from utils.Connection import Connection
+import matplotlib
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.figure import Figure
+import matplotlib.animation as animation
+
+# https://pythonprogramming.net/embedding-live-matplotlib-graph-tkinter-gui/?completed=/how-to-embed-matplotlib-graph-tkinter-gui/
 
 numPackets = 30
 delayCycles = 5
 
+# trace generated
 trace = []
+trace_seq = []
+trace_show = []
+
+# trace already sent
+trace_seq_sent = []
+trace_show_sent = []
+
 trace_str = None
 
 dumpAttack = False
 smartAttack = False
 
 starting = False
+
+attack_point = []
+
+
+f = Figure(figsize=(5, 5), dpi=100)
+
+def animate(i):
+    a = f.add_subplot(211)
+    a.clear()
+    a.plot(trace_seq, trace_show, linestyle=':', marker='o', color='gray')
+    a.set_xlim(0, len(trace_seq)+1)
+    a.set_ylim(0,40)
+    a.set_title("Generated Trace:")
+
+
+    b = f.add_subplot(212)
+    b.clear()
+    b.plot(trace_seq_sent, trace_show_sent, linestyle=':', marker='o', color='red')
+    b.set_xlim(0, len(trace_seq)+1)
+    b.set_ylim(0, 40)
+    b.set_title("Trace sent: ")
+    if len(attack_point) > 0:
+        for point in attack_point:
+            b.axvline(point, linewidth=4, color='r')
+            b.text(point+0.1, 30, r'$\leftarrow\ attack$', fontsize=20)
 
 class SampleApp(tk.Tk):
 
@@ -79,6 +118,9 @@ class StartPage(tk.Frame):
             global numPackets
             global delayCycles
             global trace
+            global trace_seq
+            global trace_show
+
             var1 = number_entry.get()
             var2 = cycle_entry.get()
             if var1.isdigit() and var2.isdigit():
@@ -88,7 +130,8 @@ class StartPage(tk.Frame):
                 # trace = [random.randint(0, len(config.dnp3Packets) - 1) for i in range(numPackets)]
                 for i in range(numPackets):
                     trace.append(random.randint(0, len(config.dnp3Packets) - 1))
-                self.generateTraceStr()
+                    trace_seq.append(i+1)
+                    trace_show.append(random.randint(1, 40))
                 controller.show_frame("PageOne")
             else:
                 invaildLabel = tk.Label(self, text="Invalid input, please try it again.",
@@ -104,38 +147,23 @@ class StartPage(tk.Frame):
         number_button.pack()
 
 
-    def generateTraceStr(self):
-        global trace
-        global trace_str
-        global numPackets
-
-        tmp = []
-        tmp.append("The trace of the packets is: \n")
-        tmp.append('*' * 110);
-        tmp.append('\n')
-        for i in range(numPackets):
-            tmp.append(str(i + 1) + ". " + config.dnp3Type[trace[i]] + "\t")
-            if (i + 1) % 5 == 0:
-                tmp.append("\n")
-        tmp.append('*' * 110)
-
-        tmp = ''.join(tmp)
-        trace_str.set(tmp)
-
-
 
 class PageOne(tk.Frame):
 
     def __init__(self, parent, controller):
         tk.Frame.__init__(self, parent)
         self.controller = controller
-        global trace_str
+        global trace_seq
+        global trace_show
 
-        trace_label = tk.Label(self, textvariable=trace_str, font=('Arial', 18), width=120, height=10, justify=tk.LEFT)
-        trace_label.pack()
+        canvas = FigureCanvasTkAgg(f, self)
+        canvas.show()
+        # canvas.get_tk_widget().pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        # canvas.get_tk_widget().pack
 
-        self.st = tkst.ScrolledText(self, font=('Arial', 18), width=120, height=17)
-        self.st.pack()
+        toolbar = NavigationToolbar2TkAgg(canvas, self)
+        toolbar.update()
+        canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
         start_button = tk.Button(self, text='Start sending packets', bg='green', width=15, height=2, command=self.startSendPackets)
         start_button.pack()
@@ -151,6 +179,9 @@ class PageOne(tk.Frame):
         t = threading.Thread(target=self.sendPackets, args=())
         t.start()
 
+
+
+
     def sendPackets(self):
         global starting
         global dumpAttack
@@ -162,57 +193,44 @@ class PageOne(tk.Frame):
 
         buffer = []
 
-        self.st.insert(tk.END, "*"*80 + "\n")
-        self.st.insert(tk.END, "   Start sending packets \n")
-        self.st.insert(tk.END, "*" * 80 + "\n")
         # Create connection
         connection = Connection(config.ipdst, DNP3PORT)
         connection.createConnection()
 
-        for i in range(numPackets):
+        i = 0
+        while i < numPackets:
+            trace_show_sent.append(trace_show[i])
+            trace_seq_sent.append(i+1)
+
             # Generate random packets
             dnp3 = config.dnp3Packets[trace[i]]
 
             # Send packets
             connection.sendPacket(dnp3)
-            self.st.insert(tk.END, str(i+1) + ". Sent \"" +config.dnp3Type[trace[i]] + "\"\n")
-
-            buffer.append(trace[i])
-            if (len(buffer) > delayCycles):
-                buffer.pop(0)
 
             time.sleep(config.normalTime)
 
             if dumpAttack:
+                attack_point.append(i+1)
                 for j in range(delayCycles):
-                    self.st.insert(tk.END, "no packet detected in this cycle\n", "warning")
-                    self.st.tag_config('warning', foreground='red')
                     time.sleep(config.normalTime)
-
+                    i = i + 1
                 dumpAttack = False
+            else:
+                i = i + 1
 
             if smartAttack:
-                self.st.insert(tk.END, "################################################\n")
-                self.st.insert(tk.END, "# Delay the next coming packet by {} cycles\n".format(len(buffer)))
-                self.st.insert(tk.END, "# Use the buffer packets to fulfill the gaps\n")
-                self.st.insert(tk.END, "################################################\n")
+                attack_point.append(i+1)
+                attack_time = i
+                for k in range(delayCycles+1, 1, -1):
+                    trace_show_sent.append(trace_show[attack_time - k])
+                    trace_seq_sent.append(i + 1)
+                    i = i+1
 
-                # print out the buff
-
-
-
-                for j in range(len(buffer)):
-                    dnp3 = config.dnp3Packets[trace[i]]
-
+                    # Send packets
                     connection.sendPacket(dnp3)
 
                     time.sleep(config.normalTime)
-
-                    self.st.insert(tk.END, "Sent buffer packets: "+config.dnp3Type[buffer[j]]+ "\n")
-
-                self.st.insert(tk.END, "################################################\n")
-
-                i = i + len(buffer)
 
                 smartAttack = False
 
@@ -223,19 +241,12 @@ class PageOne(tk.Frame):
 
     def normal_delay(self):
         global dumpAttack
-        global delayCycles
         dumpAttack = True
-        self.st.insert(tk.END, "*" * 80 + "\n")
-        self.st.insert(tk.END, "Start a dump attack, delay the next packets for {} cycles\n".format(delayCycles))
-        self.st.insert(tk.END, "*" * 80 + "\n")
 
     def smart_delay(self):
         global smartAttack
-        global delayCycles
         smartAttack = True
-        self.st.insert(tk.END, "*" * 80 + "\n")
-        self.st.insert(tk.END, "Start a smart attack\n")
-        self.st.insert(tk.END, "*" * 80 + "\n")
+
 
 if __name__ == "__main__":
 
@@ -245,4 +256,5 @@ if __name__ == "__main__":
     app = SampleApp()
     app.title("Delay Attack Demo")
     app.geometry('1400x700')
+    ani = animation.FuncAnimation(f, animate, interval=1000)
     app.mainloop()
