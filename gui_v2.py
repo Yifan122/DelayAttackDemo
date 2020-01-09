@@ -1,13 +1,11 @@
 import Tkinter as tk
 import tkFont as tkfont
 import random
-import ScrolledText as tkst
 import threading
 import time
 
 from Config import config, DNP3PORT
 from utils.Connection import Connection
-import matplotlib
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
 import matplotlib.animation as animation
@@ -33,7 +31,8 @@ smartAttack = False
 
 starting = False
 
-attack_point = []
+attack_point_normal = []
+attack_point_smart = []
 
 
 f = Figure(figsize=(5, 5), dpi=100)
@@ -43,7 +42,7 @@ def animate(i):
     a.clear()
     a.plot(trace_seq, trace_show, linestyle=':', marker='o', color='gray')
     a.set_xlim(0, len(trace_seq)+1)
-    a.set_ylim(0,40)
+    a.set_ylim(-1,1)
     a.set_title("Generated Trace:")
 
 
@@ -51,12 +50,18 @@ def animate(i):
     b.clear()
     b.plot(trace_seq_sent, trace_show_sent, linestyle=':', marker='o', color='red')
     b.set_xlim(0, len(trace_seq)+1)
-    b.set_ylim(0, 40)
+    b.set_ylim(-1, 1)
     b.set_title("Trace sent: ")
-    if len(attack_point) > 0:
-        for point in attack_point:
+    if len(attack_point_smart) > 0:
+        for point in attack_point_smart:
             b.axvline(point, linewidth=4, color='r')
-            b.text(point+0.1, 30, r'$\leftarrow\ attack$', fontsize=20)
+            b.text(point+0.1, 20, r'$\leftarrow\ Attack$', fontsize=20)
+
+    if len(attack_point_normal) > 0:
+        for point in attack_point_normal:
+            b.axvline(point, linewidth=4, color='b')
+            b.axvline(point+delayCycles, linewidth=4, color='b')
+            b.text(point+0.1, 30, r'$\leftarrow\ Missing Packets$', fontsize=20, color='b')
 
 class SampleApp(tk.Tk):
 
@@ -131,7 +136,7 @@ class StartPage(tk.Frame):
                 for i in range(numPackets):
                     trace.append(random.randint(0, len(config.dnp3Packets) - 1))
                     trace_seq.append(i+1)
-                    trace_show.append(random.randint(1, 40))
+                    trace_show.append(random.randint(1, 40)/20.0 - 1.0)
                 controller.show_frame("PageOne")
             else:
                 invaildLabel = tk.Label(self, text="Invalid input, please try it again.",
@@ -180,8 +185,6 @@ class PageOne(tk.Frame):
         t.start()
 
 
-
-
     def sendPackets(self):
         global starting
         global dumpAttack
@@ -211,7 +214,7 @@ class PageOne(tk.Frame):
             time.sleep(config.normalTime)
 
             if dumpAttack:
-                attack_point.append(i+1)
+                attack_point_normal.append(i+1)
                 for j in range(delayCycles):
                     time.sleep(config.normalTime)
                     i = i + 1
@@ -220,7 +223,7 @@ class PageOne(tk.Frame):
                 i = i + 1
 
             if smartAttack:
-                attack_point.append(i+1)
+                attack_point_smart.append(i+1)
                 attack_time = i
                 for k in range(delayCycles+1, 1, -1):
                     trace_show_sent.append(trace_show[attack_time - k])
