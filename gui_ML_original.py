@@ -23,7 +23,7 @@ delayCycles = 5
 f = Figure(figsize=(5, 6), dpi=100)
 
 show_flag = False
-time_step = 0
+time_step = 250
 
 delay_output = 0
 
@@ -36,31 +36,39 @@ def animate(i):
         a = f.add_subplot(411)
         a.clear()
         a.set_xlim(0, 450)
-        # a.set_ylim(101500, 105000)
-        a.plot(trace_gasFlow[:300+time_step], marker='o', color='black', label='Pressure')
+        a.set_ylim(101500, 105000)
+        a.plot(trace_gasFlow[150:150+time_step], marker='o', color='black', label='Pressure')
         a.legend()
 
         b = f.add_subplot(412)
         b.clear()
         b.set_xlim(0, 450)
         # b.set_ylim(4.5, 7.5)
-        b.plot(trace_Pe[:300+time_step],  marker='o', color='blue', label='Power Electricity')
+        b.plot(trace_Pe[150:150+time_step],  marker='o', color='blue', label='Power Electricity')
         b.legend()
 
         c = f.add_subplot(413)
         c.clear()
         c.set_xlim(0, 450)
-        # c.set_ylim(685,720)
-        c.plot(trace_T[:300+time_step],  marker='o', color='green', label='Temperature')
+        c.set_ylim(685,720)
+        c.plot(trace_T[150:150+time_step],  marker='o', color='green', label='Temperature')
         c.legend()
 
         # make the inputs
+        gap0 = 450 - time_step
+        gap1 = time_step - 150
 
-        r1 = trace_gasFlow[time_step:time_step+301]
-        r2 = trace_Pe[time_step:time_step+301]
-        r3 = trace_T[time_step:time_step+301]
+        r0_1 = data[0, 300 - gap0: 301]
+        r1_1 = data[delayCycles, :gap1]
 
-        r_1 = np.concatenate((r1, r2, r3), axis=0)
+        r0_2 = data[0, 601 - gap0: 602]
+        r1_2 = data[delayCycles, 302: 302 + gap1]
+
+        r0_3 = data[0, 902 - gap0: 903]
+        r1_3 = data[delayCycles, 603: 603 + gap1]
+
+        r_1 = np.concatenate((r0_1, r1_1, r0_2, r1_2, r0_3, r1_3), axis=0)
+
 
         if time_step < 450:
             time_step = time_step + 1
@@ -155,9 +163,9 @@ class StartPage(tk.Frame):
                 print "Set the number of packets successfully"
                 # trace = [random.randint(0, len(config.dnp3Packets) - 1) for i in range(numPackets)]
                 ## TODO choose the trace
-                trace_gasFlow = np.concatenate((trace_seq[delayCycles, 1:151], trace_seq[delayCycles, 1:301]), axis=0)
-                trace_Pe = np.concatenate((trace_seq[delayCycles, 302:302+150], trace_seq[delayCycles, 302:602]), axis=0)
-                trace_T = np.concatenate((trace_seq[delayCycles, 603:603+150], trace_seq[delayCycles, 603:903]), axis=0)
+                trace_gasFlow = np.concatenate((trace_gasFlow, trace_seq[delayCycles, 1:301]), axis=0)
+                trace_Pe = np.concatenate((trace_Pe, trace_seq[delayCycles, 302:602]), axis=0)
+                trace_T = np.concatenate((trace_T, trace_seq[delayCycles, 603:903]), axis=0)
                 show_flag = True
 
                 controller.show_frame("PageOne")
