@@ -1,31 +1,28 @@
 import Tkinter as tk
 import numpy as np
 import tkFont as tkfont
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+import matplotlib.animation as animation
 from matplotlib.figure import Figure
 from numpy import genfromtxt
-import matplotlib.animation as animation
 from utils import MLUtils
-import random
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 
 ml = MLUtils.MLObject('ml_data/RNN_Attention', 'ml_data/scalar_x.pkl', 'ml_data/scalar_y.pkl')
 data = genfromtxt('ml_data/data.csv', delimiter=',')
 
 trace_seq = genfromtxt('ml_data/data.csv', delimiter=',')
+
 trace_gasFlow = trace_seq[0, 1:301]
 trace_Pe = trace_seq[0, 302:602]
-trace_T  = trace_seq[0, 603:903]
+trace_T = trace_seq[0, 603:903]
 
-
+show_flag = False
+time_step = 0
+delay_output = 0
 numPackets = 30
 delayCycles = 5
 
 f = Figure(figsize=(5, 6), dpi=100)
-
-show_flag = False
-time_step = 0
-
-delay_output = 0
 
 def animate(i):
     global time_step
@@ -37,56 +34,56 @@ def animate(i):
         a.clear()
         a.set_xlim(0, 450)
         # a.set_ylim(101500, 105000)
-        a.plot(trace_gasFlow[:300+time_step], marker='o', color='black', label='Pressure')
-        a.legend()
+        a.plot(trace_gasFlow[:300 + time_step], marker='o', color='black', label='Pressure')
+        a.legend(loc="upper left")
 
         b = f.add_subplot(412)
         b.clear()
         b.set_xlim(0, 450)
         # b.set_ylim(4.5, 7.5)
-        b.plot(trace_Pe[:300+time_step],  marker='o', color='blue', label='Power Electricity')
-        b.legend()
+        b.plot(trace_Pe[:300 + time_step], marker='o', color='blue', label='Power Electricity')
+        b.legend(loc="upper left")
 
         c = f.add_subplot(413)
         c.clear()
         c.set_xlim(0, 450)
         # c.set_ylim(685,720)
-        c.plot(trace_T[:300+time_step],  marker='o', color='green', label='Temperature')
-        c.legend()
+        c.plot(trace_T[:300 + time_step], marker='o', color='green', label='Temperature')
+        c.legend(loc="upper left")
 
         # make the inputs
 
-        r1 = trace_gasFlow[time_step:time_step+301]
-        r2 = trace_Pe[time_step:time_step+301]
-        r3 = trace_T[time_step:time_step+301]
+        r1 = trace_gasFlow[time_step:time_step + 301]
+        r2 = trace_Pe[time_step:time_step + 301]
+        r3 = trace_T[time_step:time_step + 301]
 
         r_1 = np.concatenate((r1, r2, r3), axis=0)
 
-        if time_step < 450:
+        if time_step <= 150:
             time_step = time_step + 1
-
-            ########################## comment the code  ##############
+            # Prediction
             delay_output = ml.prediction(r_1.reshape(1, -1))
-
-        ########################## Uncomment the code to make it more good ##############
-            # if time_step > 350:
-            #     inputs = data[delayCycles, :].reshape((1, -1))
-            #     delay_output = ml.prediction(inputs)
-            # elif time_step > 300 and time_step <= 350:
-            #     delay_output = ml.prediction(r_1.reshape(1, -1))
-            # elif time_step <= 450:
-            #     inputs = data[0, :].reshape((1, -1))
-            #     delay_output = ml.prediction(inputs)
-            #
-            # delay_output = delay_output + random.randint(1, 40) / 70.0
-        ########################## Uncomment the code to make it more good ##############
-
 
         d = f.add_subplot(414)
         d.clear()
         d.set_xlim(0, 450)
         d.set_ylim(0, 100)
-        d.text(150, 35, 'Delay is '+ str(delay_output), fontsize=30, color='b')
+        if time_step < 50:
+            d.text(200, 35, 'Normal', fontsize=30, color='b')
+        # elif time_step >= 50 and time_step <= 140:
+        #     d.text(200, 35, 'Attack!!!', fontsize=30, color='b')
+        elif time_step > 50:
+            d.text(70, 35, 'Attack!!! Delay is ' + str(int(delay_output)), fontsize=30, color='b')
+
+        if time_step > 50:
+            b.axvline(350, linewidth=4, color='r')
+            a.axvline(350, linewidth=4, color='r')
+            c.axvline(350, linewidth=4, color='r')
+            # a.text(300, 105000, r'$Attack \rightarrow\ $',  fontsize=20, color='red')
+            # b.text(300, 60000000, r'$Attack \rightarrow\ $', fontsize=20, color='red')
+            # c.text(300, 700, r'$Attack \rightarrow\ $', fontsize=20, color='red')
+        # d.text(100, 35, 'Attack Warning !!! Delay is ' + str(int(delay_output)), fontsize=30, color='b')
+
 
 class SampleApp(tk.Tk):
 
@@ -156,24 +153,23 @@ class StartPage(tk.Frame):
                 # trace = [random.randint(0, len(config.dnp3Packets) - 1) for i in range(numPackets)]
                 ## TODO choose the trace
                 trace_gasFlow = np.concatenate((trace_seq[delayCycles, 1:151], trace_seq[delayCycles, 1:301]), axis=0)
-                trace_Pe = np.concatenate((trace_seq[delayCycles, 302:302+150], trace_seq[delayCycles, 302:602]), axis=0)
-                trace_T = np.concatenate((trace_seq[delayCycles, 603:603+150], trace_seq[delayCycles, 603:903]), axis=0)
+                trace_Pe = np.concatenate((trace_seq[delayCycles, 302:302 + 150], trace_seq[delayCycles, 302:602]),
+                                          axis=0)
+                trace_T = np.concatenate((trace_seq[delayCycles, 603:603 + 150], trace_seq[delayCycles, 603:903]),
+                                         axis=0)
                 show_flag = True
 
                 controller.show_frame("PageOne")
             else:
                 invaildLabel = tk.Label(self, text="Invalid input, please try it again.",
-                                       font=('Arial', 28),
-                                       width=40, height=2, fg="red")
+                                        font=('Arial', 28),
+                                        width=40, height=2, fg="red")
                 invaildLabel.pack()
                 print "Unsuccess to set the number"
-
-
 
         number_button = tk.Button(self, text="next",
                                   font=('Arial', 20), width=20, height=2, command=set)
         number_button.pack()
-
 
 
 class PageOne(tk.Frame):
@@ -190,19 +186,12 @@ class PageOne(tk.Frame):
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
 
-
-
-
-
-
-
 if __name__ == "__main__":
-
     dumpAttack = False
     smartAttack = False
 
     app = SampleApp()
     app.title("Delay Attack Demo")
     app.geometry('1400x700')
-    ani = animation.FuncAnimation(f, animate, interval=100)
+    ani = animation.FuncAnimation(f, animate, interval=50)
     app.mainloop()

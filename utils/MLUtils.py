@@ -3,8 +3,6 @@ from keras.backend.tensorflow_backend import set_session
 from keras.models import load_model
 from sklearn.externals import joblib
 
-
-
 class MLObject:
     def __init__(self, model_path, x_path, y_path):
         config = tf.ConfigProto()
