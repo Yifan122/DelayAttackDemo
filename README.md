@@ -17,23 +17,43 @@ Python Version: Python 2.7
 
 For GUI demo: Tkinter
 
-### How to use
+### Bro Demo
+- Before start the demo, please make sure that the bro(zeek) has been installed in the destination machine
+- Please kindly find the installation guide from https://docs.zeek.org/en/current/install/install.html
 
-- Change the ipdst in Config, which is the destination machine's IP.
-- Send the packets through command line:
- ```
- python DelayAttackDemo.py
- ```
- 
-- Send the packets through GUI:
+
+- Start the DNP3 server in the destination machine
+```buildoutcfg
+sudo python3 server.py
 ```
-python gui.py
-```
+
 - Use Bro to monitor the destination machine:
+Bro script store  in /zeek/detect.zeek
 ```buildoutcfg
 # Replace /usr/local/bro/bin/zeek with the path of your zeek bin
 # Replace enp0s25 with the network interface on your machine
 sudo /usr/local/bro/bin/zeek -i enp0s25 detect.zeek
 ```
+
+- Change the ipdst in Config, which is the destination machine's IP.
+- Send the packets through command line:
+ ```
+ python gui_bro.py
+ ```
+ 
+ ### Machine Learning Demo
+ ```buildoutcfg
+ python gui_ML.py
+```
+
+--ml_data 
+ |_ data.csv (ML data for delay from 1-50)
+ |_ delay0.csv (ML data without delay)
+ |_ RNN_Attention (ML model)
+ |_ scalar_x.pkl (Preprocessing model)
+ |_ scalar_y.pkl (Preprocessing model)
+ 
+
+
 
 

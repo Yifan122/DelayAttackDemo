@@ -1,5 +1,6 @@
 import socket
 
+# For connecting DNP3 server
 class Connection(object):
     def __init__(self, ipDst, portDst):
         self.ipDst = ipDst
